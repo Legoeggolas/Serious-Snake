@@ -8,49 +8,111 @@ class Input {
 
     update(frames, dir) {
         this.framesLeft = frames;
-        this.inputDir = dir;
+        this.inputDir = dir.copy();
+    }
+
+    dirTranslate() {
+        let dir = this.inputDir;
+        if (dir.x == 0) {
+            if (dir.y == 1) {
+                return "DOWN";
+            } else {
+                return "UP";
+            }
+        } else if (dir.x == -1) {
+            return "LEFT";
+        } else {
+            return "RIGHT";
+        }
     }
 }
 
 class InputBuffer {
     constructor() {
-        this.buffer = new Array(5).fill().map((e) => new Input());
+        this.buffer = new Array(0);
     }
 
     addInput(frames, dir) {
-        for (let input of this.buffer) {
-            if (input.framesLeft <= 0) {
-                input.update(frames, dir);
-                break;
-            }
+        let size = this.buffer.length;
+
+        if (size < 5) {
+            this.buffer.push(new Input());
+            this.buffer[size].update(frames, dir);
         }
     }
 
     update() {
         let newDir;
-        for (let input of this.buffer) {
-            input.framesLeft--;
-            if (input.framesLeft == 0) {
-                newDir = input.inputDir;
-            }
+        let size = this.buffer.length;
+        if (size == 0) {
+            return null;
+        }
+
+        for (let element of this.buffer) {
+            element.framesLeft--;
+        }
+
+        if (this.buffer[0].framesLeft == 0) {
+            newDir = this.buffer[0].inputDir;
+            let temp = this.buffer.shift();
         }
 
         return newDir;
+    }
+
+    clear() {
+        if (this.buffer.length == 0) {
+            return false;
+        }
+        this.buffer.length = 0;
+
+        return true;
+    }
+
+    showBufferedInputs() {
+        str = "";
+        for (let element of this.buffer) {
+            if (element) {
+                str += element.dirTranslate() + " ";
+            } else {
+                break;
+            }
+        }
+
+        return str;
     }
 }
 
 class Game {
     constructor(xpos, ypos) {
+        //game objects
         this.snake = new Snake(xpos, ypos);
         this.dir = createVector(0, 1);
         this.food = this.spawnFood();
 
-        this.framesTillInput = 1;
+        //buffers
         this.inputBuffer = new InputBuffer();
         this.dirBuffer = this.dir.copy();
 
-        this.frameOffset = 10;
-        this.frameRate = 10;
+        //frame delay variables
+        this.frameDelayBase = 1;
+        this.frameDelay = this.frameDelayBase;
+        this.frameDelayMax = 5;
+        this.frameDelayOffset = 5;
+
+        //frame rate variables
+        this.frameRateBase = 5;
+        this.frameRate = this.frameDelayBase;
+        this.frameRateMax = 20;
+        this.frameRateOffset = 8;
+    }
+
+    bailOut() {
+        let cleared = this.inputBuffer.clear();
+
+        if (cleared) {
+            this.frameDelayBase++;
+        }
     }
 
     updateDirBuffer(newDir) {
@@ -58,7 +120,15 @@ class Game {
     }
 
     getStats() {
-        return `Frame Time: ${1000 / this.frameRate}ms Frame Delay: ${this.framesTillInput} frames`;
+        return `Frame Time: ${1000 / this.frameRate}ms Frame Delay: ${this.frameDelay} frames`;
+    }
+
+    updateTimings() {
+        this.frameRate = this.frameRateBase + floor(this.snake.size() / this.frameRateOffset);
+        this.frameRate = Math.min(this.frameRate, this.frameRateMax);
+
+        this.frameDelay = this.frameDelayBase + floor(this.snake.size() / this.frameDelayOffset);
+        this.frameDelay = Math.min(this.frameDelay, this.frameDelayMax);
     }
 
     spawnFood() {
@@ -93,7 +163,11 @@ class Game {
         if (newDir) {
             this.dir = newDir;
         }
-        this.inputBuffer.addInput(this.framesTillInput, this.dirBuffer);
+
+        if (this.dirBuffer) {
+            this.inputBuffer.addInput(this.frameDelay, this.dirBuffer);
+            this.dirBuffer = null;
+        }
 
         this.snake.updateDir(this.dir);
 
@@ -122,7 +196,6 @@ class Game {
             this.snake.updateDir(createVector(0, 0));
         }
 
-        this.frameRate = 10 + floor(this.snake.size() / 4);
-        this.framesTillInput = 1 + floor(this.snake.size() / this.frameOffset);
+        this.updateTimings();
     }
 }

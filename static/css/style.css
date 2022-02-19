@@ -1,8 +1,17 @@
-html, body {
-  margin: 0;
-  padding: 0;
+html,
+body {
+    margin: 0;
+    padding: 0;
 }
 
 canvas {
-  display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sketch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

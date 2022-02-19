@@ -36,9 +36,9 @@ While bugs and enhancements will be fully available on the Issues tab, the list 
 - Initial P5 sketch (FIN)
 - Base game logic (FIN)
 - Serve the game using Flask (FIN)
-- A scoring system <=====
+- A scoring system (FIN)
+- Menus (Main/Controls/High Scores) <=====
 - HUD
-- Menus (Main/Controls/High Scores)
 - High Score Database (preferably MongoDB)
 - [any new features]
 - Balancing
